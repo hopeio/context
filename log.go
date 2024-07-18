@@ -1,7 +1,6 @@
 package context
 
 import (
-	"github.com/hopeio/protobuf/errcode"
 	"github.com/hopeio/utils/log"
 	"go.uber.org/zap"
 )
@@ -19,6 +18,6 @@ func (c *Context) HandleError(err error) {
 
 func (c *Context) ErrorLog(err, originErr error, funcName string) error {
 	// caller 用原始logger skip刚好
-	log.GetCallerSkipLogger(1).Errorw(originErr.Error(), zap.String(log.FieldTraceId, c.TraceID), zap.Int(log.FieldType, errcode.Code(err)), zap.String(log.FieldPosition, funcName))
+	log.GetCallerSkipLogger(1).Errorw(originErr.Error(), zap.String(log.FieldTraceId, c.TraceID), zap.String(log.FieldPosition, funcName))
 	return err
 }
