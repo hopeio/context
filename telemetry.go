@@ -45,7 +45,7 @@ func SetMeter(m metric.Meter) {
 
 func StartSpan(ctx context.Context, name string, o ...trace.SpanStartOption) (context.Context, trace.Span) {
 	if name == "" {
-		pc, _, _, _ := runtime.Caller(3)
+		pc, _, _, _ := runtime.Caller(4)
 		name = runtime.FuncForPC(pc).Name()
 	}
 	return tracer.Start(ctx, name, o...)

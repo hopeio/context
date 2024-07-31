@@ -2,6 +2,7 @@ package context
 
 import (
 	"context"
+	"github.com/google/uuid"
 	"go.opentelemetry.io/otel/trace"
 )
 
@@ -25,7 +26,11 @@ func NewContext(ctx context.Context) *Context {
 	}
 	if traceId == "" || rootSpan == nil {
 		ctx, rootSpan = StartSpan(ctx, "")
-		traceId = rootSpan.SpanContext().TraceID().String()
+		if spanContext := rootSpan.SpanContext(); spanContext.IsValid() {
+			traceId = spanContext.TraceID().String()
+		} else {
+			traceId = uuid.New().String()
+		}
 	}
 
 	return &Context{
