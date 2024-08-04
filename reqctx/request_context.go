@@ -47,7 +47,7 @@ func methodFamily(m string) string {
 }
 
 func (c *Context[REQ]) Wrapper() context.Context {
-	return context.WithValue(c.Context.BaseContext(), context2.WrapperKey(), c)
+	return context.WithValue(c.Context.Base(), context2.WrapperKey(), c)
 }
 
 func (c *Context[REQ]) StartSpanX(name string, o ...trace.SpanStartOption) (*Context[REQ], trace.Span) {
@@ -57,26 +57,26 @@ func (c *Context[REQ]) StartSpanX(name string, o ...trace.SpanStartOption) (*Con
 
 func FromContextValue[REQ any](ctx context.Context) *Context[REQ] {
 	if ctx == nil {
-		return NewRequestContext[REQ](context.Background(), *new(REQ))
+		return New[REQ](context.Background(), *new(REQ))
 	}
 
 	ctxi := ctx.Value(context2.WrapperKey())
 	c, ok := ctxi.(*Context[REQ])
 	if !ok {
-		c = NewRequestContext[REQ](ctx, *new(REQ))
+		c = New[REQ](ctx, *new(REQ))
 	}
 	if c.ServerTransportStream == nil {
 		c.ServerTransportStream = grpc.ServerTransportStreamFromContext(ctx)
 	}
-	c.SetBaseContext(ctx)
+	c.SetBase(ctx)
 	return c
 }
 
-func NewRequestContext[REQ any](ctx context.Context, req REQ) *Context[REQ] {
+func New[REQ any](ctx context.Context, req REQ) *Context[REQ] {
 	now := time.Now()
 
 	return &Context[REQ]{
-		Context: *context2.NewContext(ctx),
+		Context: *context2.New(ctx),
 		ReqValue: ReqValue[REQ]{
 			RequestCtx: req,
 			RequestAt: http.RequestAt{
@@ -96,7 +96,7 @@ func (c *Context[REQ]) reset(ctx context.Context) *Context[REQ] {
 	if traceId == "" {
 		traceId = uuid.New().String()
 	}
-	c.SetBaseContext(ctx)
+	c.SetBase(ctx)
 	c.RequestAt.Time = now
 	c.RequestAt.TimeString = now.Format(timei.LayoutTimeMacro)
 	c.RequestAt.TimeStamp = now.Unix()

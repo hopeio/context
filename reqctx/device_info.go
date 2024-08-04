@@ -18,7 +18,10 @@ type DeviceInfo struct {
 	UserAgent string  `json:"userAgent" gorm:"size:255"`
 }
 
-func Device(infoHeader, area, localHeader, userAgent, ip string) *DeviceInfo {
+// info: device,os,appCode,appVersion
+// area:xxx
+// location:1.23456,2.123456
+func Device(infoHeader, area, location, userAgent, ip string) *DeviceInfo {
 	unknow := true
 	var info DeviceInfo
 	//Device-Info:device,osInfo,appCode,appVersion
@@ -48,16 +51,16 @@ func Device(infoHeader, area, localHeader, userAgent, ip string) *DeviceInfo {
 		unknow = false
 		info.Area, _ = url.PathUnescape(area)
 	}
-	if localHeader != "" {
+	if location != "" {
 		unknow = false
 		var n, m int
-		for i, c := range localHeader {
+		for i, c := range location {
 			if c == ',' {
 				switch n {
 				case 0:
-					info.Lng, _ = strconv.ParseFloat(localHeader[m:i], 64)
+					info.Lng, _ = strconv.ParseFloat(location[m:i], 64)
 				case 1:
-					info.Lat, _ = strconv.ParseFloat(localHeader[m:i], 64)
+					info.Lat, _ = strconv.ParseFloat(location[m:i], 64)
 				}
 				m = i + 1
 				n++

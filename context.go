@@ -4,15 +4,16 @@ import (
 	"context"
 	"github.com/google/uuid"
 	"go.opentelemetry.io/otel/trace"
+	"time"
 )
 
 type Context struct {
 	ctx      context.Context
 	rootSpan trace.Span
-	TraceID  string
+	traceID  string
 }
 
-func NewContext(ctx context.Context) *Context {
+func New(ctx context.Context) *Context {
 	var traceId string
 	var rootSpan trace.Span
 	if ctx != nil {
@@ -36,8 +37,12 @@ func NewContext(ctx context.Context) *Context {
 	return &Context{
 		ctx:      ctx,
 		rootSpan: rootSpan,
-		TraceID:  traceId,
+		traceID:  traceId,
 	}
+}
+
+func (c *Context) TraceID() string {
+	return c.traceID
 }
 
 type ctxKey struct{}
@@ -52,28 +57,72 @@ func WrapperKey() ctxKey {
 
 func FromContextValue(ctx context.Context) *Context {
 	if ctx == nil {
-		return NewContext(nil)
+		return New(nil)
 	}
 
 	ctxi := ctx.Value(ctxKey{})
 	c, ok := ctxi.(*Context)
 	if !ok {
-		c = NewContext(ctx)
+		c = New(ctx)
 	}
 	c.ctx = ctx
 	return c
 }
 
-func (c *Context) BaseContext() context.Context {
+func (c *Context) Base() context.Context {
 	return c.ctx
 }
 
-func (c *Context) SetBaseContext(ctx context.Context) {
+func (c *Context) SetBase(ctx context.Context) {
 	c.ctx = ctx
 }
 
 func (c *Context) RootSpan() trace.Span {
 	return c.rootSpan
+}
+
+func (c *Context) WithTimeout(timeout time.Duration) context.CancelFunc {
+	var cancel context.CancelFunc
+	c.ctx, cancel = context.WithTimeout(c.ctx, timeout)
+	return cancel
+}
+
+func (c *Context) WithTimeoutCause(timeout time.Duration, cause error) context.CancelFunc {
+	var cancel context.CancelFunc
+	c.ctx, cancel = context.WithTimeoutCause(c.ctx, timeout, cause)
+	return cancel
+}
+
+func (c *Context) WithCancel() context.CancelFunc {
+	var cancel context.CancelFunc
+	c.ctx, cancel = context.WithCancel(c.ctx)
+	return cancel
+}
+
+func (c *Context) WithoutCancel() {
+	c.ctx = context.WithoutCancel(c.ctx)
+}
+
+func (c *Context) WithValue(key, val any) {
+	c.ctx = context.WithValue(c.ctx, key, val)
+}
+
+func (c *Context) WithCancelCause() context.CancelCauseFunc {
+	var cancel context.CancelCauseFunc
+	c.ctx, cancel = context.WithCancelCause(c.ctx)
+	return cancel
+}
+
+func (c *Context) WithDeadline(d time.Time) context.CancelFunc {
+	var cancel context.CancelFunc
+	c.ctx, cancel = context.WithDeadline(c.ctx, d)
+	return cancel
+}
+
+func (c *Context) WithDeadlineCause(d time.Time, cause error) context.CancelFunc {
+	var cancel context.CancelFunc
+	c.ctx, cancel = context.WithDeadlineCause(c.ctx, d, cause)
+	return cancel
 }
 
 type ValueContext[V any] struct {

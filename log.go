@@ -5,19 +5,12 @@ import (
 	"go.uber.org/zap"
 )
 
-func (c *Context) Error(args ...interface{}) {
-	args = append(args, log.FieldTraceId, c.TraceID)
-	log.Error(args...)
+func (c *Context) ErrorLog(args ...any) {
+	log.Errorw(log.Sprintln(args...), zap.String(log.FieldTraceId, c.traceID))
 }
 
-func (c *Context) HandleError(err error) {
-	if err != nil {
-		log.Errorw(err.Error(), zap.String(log.FieldTraceId, c.TraceID))
-	}
-}
-
-func (c *Context) ErrorLog(err, originErr error, funcName string) error {
+func (c *Context) RespErrorLog(err, originErr error, funcName string) error {
 	// caller 用原始logger skip刚好
-	log.GetCallerSkipLogger(1).Errorw(originErr.Error(), zap.String(log.FieldTraceId, c.TraceID), zap.String(log.FieldPosition, funcName))
+	log.GetCallerSkipLogger(1).Errorw(originErr.Error(), zap.String(log.FieldTraceId, c.traceID), zap.String(log.FieldPosition, funcName))
 	return err
 }

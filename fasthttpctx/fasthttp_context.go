@@ -24,7 +24,7 @@ func FromRequest(req *fasthttp.RequestCtx) *Context {
 		ctx = req
 	}
 
-	ctxi := reqctx.NewRequestContext[*fasthttp.RequestCtx](ctx, req)
+	ctxi := reqctx.New[*fasthttp.RequestCtx](ctx, req)
 	setWithReq(ctxi, r)
 	return ctxi
 }

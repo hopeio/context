@@ -26,7 +26,7 @@ func FromRequest(req fiber.Ctx) *Context {
 	if r != nil {
 		ctx = req.Context()
 	}
-	ctxi := reqctx.NewRequestContext[fiber.Ctx](ctx, req)
+	ctxi := reqctx.New[fiber.Ctx](ctx, req)
 	setWithReq(ctxi, req.Request())
 	return ctxi
 }

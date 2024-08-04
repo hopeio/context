@@ -27,7 +27,7 @@ func FromRequest(req RequestCtx) *Context {
 		ctx = r.Context()
 	}
 
-	ctxi := reqctx.NewRequestContext[RequestCtx](ctx, req)
+	ctxi := reqctx.New[RequestCtx](ctx, req)
 	setWithHttpReq(ctxi, r)
 	return ctxi
 }
