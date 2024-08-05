@@ -7,7 +7,7 @@ import (
 )
 
 func (c *Context) Log(lvl zapcore.Level, msg string, fields ...zap.Field) {
-	log.Log(lvl, msg, append(fields, zap.String(log.FieldTraceId, c.traceID))...)
+	log.Logw(lvl, msg, append(fields, zap.String(log.FieldTraceId, c.traceID))...)
 }
 
 func (c *Context) ErrorLog(err error, fields ...zap.Field) {
