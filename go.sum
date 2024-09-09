@@ -96,6 +96,8 @@ github.com/hopeio/utils v0.1.12-0.20240826105341-c8a6890167e1 h1:+qQvCOTrcMWMiXk
 github.com/hopeio/utils v0.1.12-0.20240826105341-c8a6890167e1/go.mod h1:JOTzezenWTsH6AOyJTr5To1dR+bQEcxEmspPi7NtaeY=
 github.com/hopeio/utils v0.1.12 h1:lH/72KOzwYtB6Z/2qEiQ/DckmjHqdjGlJ3qBlR2KCJs=
 github.com/hopeio/utils v0.1.12/go.mod h1:JOTzezenWTsH6AOyJTr5To1dR+bQEcxEmspPi7NtaeY=
+github.com/hopeio/utils v0.1.13 h1:50n0LDKmbQ93MBIlh5Qj+CaWTzbotJATIZArXKlORDI=
+github.com/hopeio/utils v0.1.13/go.mod h1:5DJ6FmPd3aSRNYnUrUBjpt0fn/6slD2QUUEicNHOM0k=
 github.com/json-iterator/go v1.1.12 h1:PV8peI4a0ysnczrg+LtxykD8LfKY9ML6u2jnxaEnrnM=
 github.com/json-iterator/go v1.1.12/go.mod h1:e30LSqwooZae/UwlEbR2852Gd8hjQvJoHmT4TnhNGBo=
 github.com/klauspost/compress v1.17.8 h1:YcnTYrq7MikUT7k0Yb5eceMmALQPYBW/Xltxn0NAMnU=
