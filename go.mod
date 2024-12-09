@@ -2,8 +2,6 @@ module github.com/hopeio/context
 
 go 1.23
 
-toolchain go1.23.0
-
 require (
 	github.com/gin-gonic/gin v1.10.0
 	github.com/go-playground/locales v0.14.1 // indirect
