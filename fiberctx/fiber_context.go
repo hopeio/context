@@ -12,7 +12,7 @@ import (
 	"github.com/hopeio/context/fasthttpctx"
 	"github.com/hopeio/context/reqctx"
 	httpi "github.com/hopeio/utils/net/http"
-	fasthttpi "github.com/hopeio/utils/net/http/fasthttp"
+	fiberi "github.com/hopeio/utils/net/http/fiber"
 	stringsi "github.com/hopeio/utils/strings"
 	"github.com/valyala/fasthttp"
 	"google.golang.org/grpc/metadata"
@@ -23,6 +23,14 @@ type Context = reqctx.Context[fiber.Ctx]
 
 func FromContextValue(ctx context.Context) *Context {
 	return reqctx.FromContextValue[fiber.Ctx](ctx)
+}
+
+func ConvertToFastHttpCtx(ctx *Context) *fasthttpctx.Context {
+	return &fasthttpctx.Context{
+		Context:  ctx.Context,
+		ReqValue: reqctx.ReqValue{},
+		ReqCtx:   ctx.ReqCtx.Context(),
+	}
 }
 
 func FromRequest(req fiber.Ctx) *Context {
@@ -41,7 +49,7 @@ func setWithReq(c *reqctx.Context[fiber.Ctx], r *fasthttp.Request) {
 	if r == nil {
 		return
 	}
-	c.Token = fasthttpi.GetToken(r)
+	c.Token = fiberi.GetToken(r)
 	c.DeviceInfo = fasthttpctx.Device(&r.Header)
 	c.Internal = stringsi.BytesToString(r.Header.Peek(httpi.HeaderGrpcInternal))
 }
@@ -55,7 +63,7 @@ func DeviceFromHeader(r http.Header) *reqctx.DeviceInfo {
 type FiberContext Context
 
 func (c *FiberContext) SetHeader(md metadata.MD) error {
-	resp := c.RequestCtx.Response()
+	resp := c.ReqCtx.Response()
 	for k, v := range md {
 		if len(v) > 0 {
 			resp.Header.Set(k, v[0])
@@ -71,7 +79,7 @@ func (c *FiberContext) SetHeader(md metadata.MD) error {
 }
 
 func (c *FiberContext) SendHeader(md metadata.MD) error {
-	resp := c.RequestCtx.Response()
+	resp := c.ReqCtx.Response()
 	for k, v := range md {
 		if len(v) > 0 {
 			resp.Header.Set(k, v[0])
@@ -87,7 +95,7 @@ func (c *FiberContext) SendHeader(md metadata.MD) error {
 }
 
 func (c *FiberContext) WriteHeader(k, v string) error {
-	c.RequestCtx.Response().Header.Set(k, v)
+	c.ReqCtx.Response().Header.Set(k, v)
 	if c.ServerTransportStream != nil {
 		err := c.ServerTransportStream.SendHeader(metadata.MD{k: []string{v}})
 		if err != nil {
@@ -98,7 +106,7 @@ func (c *FiberContext) WriteHeader(k, v string) error {
 }
 
 func (c *FiberContext) SetCookie(v string) error {
-	c.RequestCtx.Response().Header.Set(httpi.HeaderSetCookie, v)
+	c.ReqCtx.Response().Header.Set(httpi.HeaderSetCookie, v)
 	if c.ServerTransportStream != nil {
 		err := c.ServerTransportStream.SendHeader(metadata.MD{httpi.HeaderSetCookie: []string{v}})
 		if err != nil {
@@ -109,7 +117,7 @@ func (c *FiberContext) SetCookie(v string) error {
 }
 
 func (c *FiberContext) SetTrailer(md metadata.MD) error {
-	req := c.RequestCtx.Request()
+	req := c.ReqCtx.Request()
 	for k, v := range md {
 		if len(v) > 0 {
 			req.Header.Set(k, v[0])

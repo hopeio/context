@@ -54,14 +54,15 @@ func DeviceFromHeader(r http.Header) *reqctx.DeviceInfo {
 }
 
 type ReqValue[REQ any, V any] struct {
-	reqctx.ReqValue[REQ]
-	Value V
+	reqctx.ReqValue
+	ReqCtx REQ
+	Value  V
 }
 
 type HttpContext Context
 
 func (c *HttpContext) SetHeader(md metadata.MD) error {
-	header := c.RequestCtx.Response.Header()
+	header := c.ReqCtx.Response.Header()
 	for k, v := range md {
 		if len(v) > 0 {
 			header.Set(k, v[0])
@@ -77,7 +78,7 @@ func (c *HttpContext) SetHeader(md metadata.MD) error {
 }
 
 func (c *HttpContext) SendHeader(md metadata.MD) error {
-	header := c.RequestCtx.Response.Header()
+	header := c.ReqCtx.Response.Header()
 	for k, v := range md {
 		if len(v) > 0 {
 			header.Set(k, v[0])
@@ -93,7 +94,7 @@ func (c *HttpContext) SendHeader(md metadata.MD) error {
 }
 
 func (c *HttpContext) WriteHeader(k, v string) error {
-	c.RequestCtx.Response.Header().Set(k, v)
+	c.ReqCtx.Response.Header().Set(k, v)
 	if c.ServerTransportStream != nil {
 		err := c.ServerTransportStream.SendHeader(metadata.MD{k: []string{v}})
 		if err != nil {
@@ -104,7 +105,7 @@ func (c *HttpContext) WriteHeader(k, v string) error {
 }
 
 func (c *HttpContext) SetCookie(v string) error {
-	c.RequestCtx.Response.Header().Set(httpi.HeaderSetCookie, v)
+	c.ReqCtx.Response.Header().Set(httpi.HeaderSetCookie, v)
 	if c.ServerTransportStream != nil {
 		err := c.ServerTransportStream.SendHeader(metadata.MD{httpi.HeaderSetCookie: []string{v}})
 		if err != nil {
@@ -116,7 +117,7 @@ func (c *HttpContext) SetCookie(v string) error {
 
 func (c *HttpContext) SetTrailer(md metadata.MD) error {
 	for k, v := range md {
-		c.RequestCtx.Request.Header[k] = v
+		c.ReqCtx.Request.Header[k] = v
 	}
 	if c.ServerTransportStream != nil {
 		err := c.ServerTransportStream.SetTrailer(md)

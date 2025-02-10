@@ -10,7 +10,7 @@ import (
 	"context"
 	"github.com/hopeio/context/reqctx"
 	httpi "github.com/hopeio/utils/net/http"
-	fasthttpi "github.com/hopeio/utils/net/http/fasthttp"
+	fiberi "github.com/hopeio/utils/net/http/fiber"
 	stringsi "github.com/hopeio/utils/strings"
 	"github.com/valyala/fasthttp"
 	"google.golang.org/grpc/metadata"
@@ -36,7 +36,7 @@ func FromRequest(req *fasthttp.RequestCtx) *Context {
 }
 
 func setWithReq(c *Context, r *fasthttp.Request) {
-	c.Token = fasthttpi.GetToken(r)
+	c.Token = fiberi.GetToken(r)
 	c.DeviceInfo = Device(&r.Header)
 	c.Internal = stringsi.BytesToString(r.Header.Peek(httpi.HeaderGrpcInternal))
 }
@@ -53,7 +53,7 @@ func Device(r *fasthttp.RequestHeader) *reqctx.DeviceInfo {
 type FastHttpContext Context
 
 func (c *FastHttpContext) SetHeader(md metadata.MD) error {
-	header := &c.RequestCtx.Response.Header
+	header := &c.ReqCtx.Response.Header
 	for k, v := range md {
 		if len(v) > 0 {
 			header.Set(k, v[0])
@@ -69,7 +69,7 @@ func (c *FastHttpContext) SetHeader(md metadata.MD) error {
 }
 
 func (c *FastHttpContext) SendHeader(md metadata.MD) error {
-	header := &c.RequestCtx.Response.Header
+	header := &c.ReqCtx.Response.Header
 	for k, v := range md {
 		if len(v) > 0 {
 			header.Set(k, v[0])
@@ -85,7 +85,7 @@ func (c *FastHttpContext) SendHeader(md metadata.MD) error {
 }
 
 func (c *FastHttpContext) WriteHeader(k, v string) error {
-	c.RequestCtx.Response.Header.Set(k, v)
+	c.ReqCtx.Response.Header.Set(k, v)
 	if c.ServerTransportStream != nil {
 		err := c.ServerTransportStream.SendHeader(metadata.MD{k: []string{v}})
 		if err != nil {
@@ -96,7 +96,7 @@ func (c *FastHttpContext) WriteHeader(k, v string) error {
 }
 
 func (c *FastHttpContext) SetCookie(v string) error {
-	c.RequestCtx.Response.Header.Set(httpi.HeaderSetCookie, v)
+	c.ReqCtx.Response.Header.Set(httpi.HeaderSetCookie, v)
 	if c.ServerTransportStream != nil {
 		err := c.ServerTransportStream.SendHeader(metadata.MD{httpi.HeaderSetCookie: []string{v}})
 		if err != nil {
@@ -109,7 +109,7 @@ func (c *FastHttpContext) SetCookie(v string) error {
 func (c *FastHttpContext) SetTrailer(md metadata.MD) error {
 	for k, v := range md {
 		if len(v) > 0 {
-			c.RequestCtx.Response.Header.Set(k, v[0])
+			c.ReqCtx.Response.Header.Set(k, v[0])
 		}
 	}
 	if c.ServerTransportStream != nil {

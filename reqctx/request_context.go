@@ -25,23 +25,23 @@ func GetPool[REQ any]() sync.Pool {
 	}}
 }
 
-type ReqValue[REQ any] struct {
+type ReqValue struct {
 	Token       string
 	AuthInfoRaw string
 	AuthID      string
 	AuthInfo
 	*DeviceInfo
-	RequestCtx REQ
 	grpc.ServerTransportStream
 	Internal string
 	http.RequestAt
 }
 
-type ReqCtx[REQ any] context2.ValueContext[ReqValue[REQ]]
+type ReqCtx[REQ any] context2.ValueContext[ReqValue]
 
 type Context[REQ any] struct {
 	context2.Context
-	ReqValue[REQ]
+	ReqValue
+	ReqCtx REQ
 }
 
 func methodFamily(m string) string {
@@ -83,8 +83,7 @@ func New[REQ any](ctx context.Context, req REQ) *Context[REQ] {
 
 	return &Context[REQ]{
 		Context: *context2.New(ctx),
-		ReqValue: ReqValue[REQ]{
-			RequestCtx: req,
+		ReqValue: ReqValue{
 			RequestAt: http.RequestAt{
 				Time:       now,
 				TimeStamp:  now.Unix(),
@@ -92,6 +91,7 @@ func New[REQ any](ctx context.Context, req REQ) *Context[REQ] {
 			},
 			ServerTransportStream: grpc.ServerTransportStreamFromContext(ctx),
 		},
+		ReqCtx: req,
 	}
 }
 

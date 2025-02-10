@@ -9,6 +9,7 @@ package ginctx
 import (
 	"context"
 	"github.com/gin-gonic/gin"
+	"github.com/hopeio/context/httpctx"
 	"github.com/hopeio/context/reqctx"
 	httpi "github.com/hopeio/utils/net/http"
 	"google.golang.org/grpc/metadata"
@@ -19,6 +20,14 @@ type Context = reqctx.Context[*gin.Context]
 
 func FromContextValue(ctx context.Context) *Context {
 	return reqctx.FromContextValue[*gin.Context](ctx)
+}
+
+func ConvertToHttpCtx(ctx *Context) *httpctx.Context {
+	return &httpctx.Context{
+		Context:  ctx.Context,
+		ReqValue: reqctx.ReqValue{},
+		ReqCtx:   httpctx.RequestCtx{ctx.ReqCtx.Request, ctx.ReqCtx.Writer},
+	}
 }
 
 func FromRequest(req *gin.Context) *Context {
@@ -52,7 +61,7 @@ func DeviceFromHeader(r http.Header) *reqctx.DeviceInfo {
 type GinContext Context
 
 func (c *GinContext) SetHeader(md metadata.MD) error {
-	header := c.RequestCtx.Writer.Header()
+	header := c.ReqCtx.Writer.Header()
 	for k, v := range md {
 		if len(v) > 0 {
 			header.Set(k, v[0])
@@ -68,7 +77,7 @@ func (c *GinContext) SetHeader(md metadata.MD) error {
 }
 
 func (c *GinContext) SendHeader(md metadata.MD) error {
-	header := c.RequestCtx.Writer.Header()
+	header := c.ReqCtx.Writer.Header()
 	for k, v := range md {
 		if len(v) > 0 {
 			header.Set(k, v[0])
@@ -84,7 +93,7 @@ func (c *GinContext) SendHeader(md metadata.MD) error {
 }
 
 func (c *GinContext) WriteHeader(k, v string) error {
-	c.RequestCtx.Writer.Header().Set(k, v)
+	c.ReqCtx.Writer.Header().Set(k, v)
 	if c.ServerTransportStream != nil {
 		err := c.ServerTransportStream.SendHeader(metadata.MD{k: []string{v}})
 		if err != nil {
@@ -95,7 +104,7 @@ func (c *GinContext) WriteHeader(k, v string) error {
 }
 
 func (c *GinContext) SetCookie(v string) error {
-	c.RequestCtx.Writer.Header().Set(httpi.HeaderSetCookie, v)
+	c.ReqCtx.Writer.Header().Set(httpi.HeaderSetCookie, v)
 	if c.ServerTransportStream != nil {
 		err := c.ServerTransportStream.SendHeader(metadata.MD{httpi.HeaderSetCookie: []string{v}})
 		if err != nil {
@@ -107,7 +116,7 @@ func (c *GinContext) SetCookie(v string) error {
 
 func (c *GinContext) SetTrailer(md metadata.MD) error {
 	for k, v := range md {
-		c.RequestCtx.Request.Header[k] = v
+		c.ReqCtx.Request.Header[k] = v
 	}
 	if c.ServerTransportStream != nil {
 		err := c.ServerTransportStream.SetTrailer(md)
