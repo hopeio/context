@@ -16,7 +16,6 @@ type AuthInfo interface {
 }
 
 type AuthInterface interface {
-	Validate() error
 	ParseToken(token string, secret []byte) error
 }
 
