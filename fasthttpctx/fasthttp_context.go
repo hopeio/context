@@ -9,17 +9,39 @@ package fasthttpctx
 import (
 	"context"
 	"github.com/hopeio/context/reqctx"
-	httpi "github.com/hopeio/utils/net/http"
-	fiberi "github.com/hopeio/utils/net/http/fiber"
 	stringsi "github.com/hopeio/utils/strings"
 	"github.com/valyala/fasthttp"
-	"google.golang.org/grpc/metadata"
+	"net/http"
 )
 
-type Context = reqctx.Context[*fasthttp.RequestCtx]
+type RequestCtx struct {
+	*fasthttp.RequestCtx
+}
+
+func (ctx RequestCtx) SetHeaders(md http.Header) {
+	for k, v := range md {
+		for _, vv := range v {
+			ctx.RequestCtx.Response.Header.Add(k, vv)
+		}
+	}
+}
+
+func (ctx RequestCtx) SetHeader(k, v string) {
+	ctx.RequestCtx.Response.Header.Set(k, v)
+}
+
+func (ctx RequestCtx) AddHeader(k, v string) {
+	ctx.RequestCtx.Response.Header.Add(k, v)
+}
+
+func (ctx RequestCtx) GetHeader(k string) string {
+	return stringsi.BytesToString(ctx.RequestCtx.Request.Header.Peek(k))
+}
+
+type Context = reqctx.Context[RequestCtx]
 
 func FromContextValue(ctx context.Context) *Context {
-	return reqctx.FromContextValue[*fasthttp.RequestCtx](ctx)
+	return reqctx.FromContextValue[RequestCtx](ctx)
 }
 
 func FromRequest(req *fasthttp.RequestCtx) *Context {
@@ -30,93 +52,7 @@ func FromRequest(req *fasthttp.RequestCtx) *Context {
 		ctx = req
 	}
 
-	ctxi := reqctx.New[*fasthttp.RequestCtx](ctx, req)
-	setWithReq(ctxi, r)
+	ctxi := reqctx.New[RequestCtx](ctx, RequestCtx{req})
+
 	return ctxi
-}
-
-func setWithReq(c *Context, r *fasthttp.Request) {
-	c.Token = fiberi.GetToken(r)
-	c.DeviceInfo = Device(&r.Header)
-	c.Internal = stringsi.BytesToString(r.Header.Peek(httpi.HeaderGrpcInternal))
-}
-
-func Device(r *fasthttp.RequestHeader) *reqctx.DeviceInfo {
-	return reqctx.Device(stringsi.BytesToString(r.Peek(httpi.HeaderDeviceInfo)),
-		stringsi.BytesToString(r.Peek(httpi.HeaderArea)),
-		stringsi.BytesToString(r.Peek(httpi.HeaderLocation)),
-		stringsi.BytesToString(r.Peek(httpi.HeaderUserAgent)),
-		stringsi.BytesToString(r.Peek(httpi.HeaderXForwardedFor)),
-	)
-}
-
-type FastHttpContext Context
-
-func (c *FastHttpContext) SetHeader(md metadata.MD) error {
-	header := &c.ReqCtx.Response.Header
-	for k, v := range md {
-		if len(v) > 0 {
-			header.Set(k, v[0])
-		}
-	}
-	if c.ServerTransportStream != nil {
-		err := c.ServerTransportStream.SetHeader(md)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func (c *FastHttpContext) SendHeader(md metadata.MD) error {
-	header := &c.ReqCtx.Response.Header
-	for k, v := range md {
-		if len(v) > 0 {
-			header.Set(k, v[0])
-		}
-	}
-	if c.ServerTransportStream != nil {
-		err := c.ServerTransportStream.SendHeader(md)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func (c *FastHttpContext) WriteHeader(k, v string) error {
-	c.ReqCtx.Response.Header.Set(k, v)
-	if c.ServerTransportStream != nil {
-		err := c.ServerTransportStream.SendHeader(metadata.MD{k: []string{v}})
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func (c *FastHttpContext) SetCookie(v string) error {
-	c.ReqCtx.Response.Header.Set(httpi.HeaderSetCookie, v)
-	if c.ServerTransportStream != nil {
-		err := c.ServerTransportStream.SendHeader(metadata.MD{httpi.HeaderSetCookie: []string{v}})
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func (c *FastHttpContext) SetTrailer(md metadata.MD) error {
-	for k, v := range md {
-		if len(v) > 0 {
-			c.ReqCtx.Response.Header.Set(k, v[0])
-		}
-	}
-	if c.ServerTransportStream != nil {
-		err := c.ServerTransportStream.SetTrailer(md)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
 }

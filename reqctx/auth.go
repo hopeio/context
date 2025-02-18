@@ -6,19 +6,21 @@
 
 package reqctx
 
+import (
+	httpi "github.com/hopeio/utils/net/http"
+	"net/http"
+)
+
 type AuthInfo interface {
 	IdStr() string
 }
 
-/*
-
 type AuthInterface interface {
 	Validate() error
-	GenerateToken(secret []byte) (string, error)
 	ParseToken(token string, secret []byte) error
 }
 
-
+/*
 type Authorization struct {
 	AuthInfo `json:"auth"`
 	jwt.RegisteredClaims
@@ -46,3 +48,20 @@ func (x *Authorization) ParseToken(token string, secret []byte) error {
 	return nil
 }
 */
+
+func GetToken[REQ ReqCtx](r REQ) string {
+	if token := r.GetHeader(httpi.HeaderAuthorization); token != "" {
+		return token
+	}
+	cookie := r.GetHeader(httpi.HeaderCookie)
+	parseCookie, err := http.ParseCookie(cookie)
+	if err != nil {
+		return ""
+	}
+	for _, v := range parseCookie {
+		if v.Name == httpi.HeaderCookieValueToken {
+			return v.Value
+		}
+	}
+	return ""
+}

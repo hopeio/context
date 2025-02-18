@@ -11,23 +11,40 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/hopeio/context/httpctx"
 	"github.com/hopeio/context/reqctx"
-	httpi "github.com/hopeio/utils/net/http"
-	"google.golang.org/grpc/metadata"
 	"net/http"
 )
 
-type Context = reqctx.Context[*gin.Context]
-
-func FromContextValue(ctx context.Context) *Context {
-	return reqctx.FromContextValue[*gin.Context](ctx)
+type RequestCtx struct {
+	*gin.Context
 }
 
-func ConvertToHttpCtx(ctx *Context) *httpctx.Context {
-	return &httpctx.Context{
-		Context:  ctx.Context,
-		ReqValue: reqctx.ReqValue{},
-		ReqCtx:   httpctx.RequestCtx{ctx.ReqCtx.Request, ctx.ReqCtx.Writer},
+func (ctx RequestCtx) SetHeaders(md http.Header) {
+	header := ctx.Writer.Header()
+	for k, v := range md {
+		header[k] = v
 	}
+}
+
+func (ctx RequestCtx) SetHeader(k, v string) {
+	ctx.Writer.Header().Set(k, v)
+}
+
+func (ctx RequestCtx) AddHeader(k, v string) {
+	ctx.Writer.Header().Add(k, v)
+}
+
+func (ctx RequestCtx) GetHeader(k string) string {
+	return ctx.Request.Header.Get(k)
+}
+
+func (ctx RequestCtx) ToHttpReqCtx() httpctx.RequestCtx {
+	return httpctx.RequestCtx{Request: ctx.Request, Response: ctx.Writer}
+}
+
+type Context = reqctx.Context[RequestCtx]
+
+func FromContextValue(ctx context.Context) *Context {
+	return reqctx.FromContextValue[RequestCtx](ctx)
 }
 
 func FromRequest(req *gin.Context) *Context {
@@ -38,91 +55,6 @@ func FromRequest(req *gin.Context) *Context {
 		ctx = r.Context()
 	}
 
-	ctxi := reqctx.New[*gin.Context](ctx, req)
-	setWithHttpReq(ctxi, r)
+	ctxi := reqctx.New[RequestCtx](ctx, RequestCtx{req})
 	return ctxi
-}
-
-func setWithHttpReq(c *reqctx.Context[*gin.Context], r *http.Request) {
-	if r == nil {
-		return
-	}
-	c.DeviceInfo = DeviceFromHeader(r.Header)
-	c.Internal = r.Header.Get(httpi.HeaderGrpcInternal)
-	c.Token = httpi.GetToken(r)
-}
-
-func DeviceFromHeader(r http.Header) *reqctx.DeviceInfo {
-	return reqctx.Device(r.Get(httpi.HeaderDeviceInfo),
-		r.Get(httpi.HeaderArea), r.Get(httpi.HeaderLocation),
-		r.Get(httpi.HeaderUserAgent), r.Get(httpi.HeaderXForwardedFor))
-}
-
-type GinContext Context
-
-func (c *GinContext) SetHeader(md metadata.MD) error {
-	header := c.ReqCtx.Writer.Header()
-	for k, v := range md {
-		if len(v) > 0 {
-			header.Set(k, v[0])
-		}
-	}
-	if c.ServerTransportStream != nil {
-		err := c.ServerTransportStream.SetHeader(md)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func (c *GinContext) SendHeader(md metadata.MD) error {
-	header := c.ReqCtx.Writer.Header()
-	for k, v := range md {
-		if len(v) > 0 {
-			header.Set(k, v[0])
-		}
-	}
-	if c.ServerTransportStream != nil {
-		err := c.ServerTransportStream.SendHeader(md)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func (c *GinContext) WriteHeader(k, v string) error {
-	c.ReqCtx.Writer.Header().Set(k, v)
-	if c.ServerTransportStream != nil {
-		err := c.ServerTransportStream.SendHeader(metadata.MD{k: []string{v}})
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func (c *GinContext) SetCookie(v string) error {
-	c.ReqCtx.Writer.Header().Set(httpi.HeaderSetCookie, v)
-	if c.ServerTransportStream != nil {
-		err := c.ServerTransportStream.SendHeader(metadata.MD{httpi.HeaderSetCookie: []string{v}})
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func (c *GinContext) SetTrailer(md metadata.MD) error {
-	for k, v := range md {
-		c.ReqCtx.Request.Header[k] = v
-	}
-	if c.ServerTransportStream != nil {
-		err := c.ServerTransportStream.SetTrailer(md)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
 }

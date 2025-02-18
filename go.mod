@@ -16,13 +16,13 @@ require (
 	go.uber.org/zap v1.27.0
 	golang.org/x/net v0.34.0 // indirect
 	google.golang.org/grpc v1.69.0
-	google.golang.org/protobuf v1.35.2 // indirect
+	google.golang.org/protobuf v1.36.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
 require (
 	github.com/gofiber/fiber/v3 v3.0.0-beta.3
-	github.com/hopeio/utils v0.7.3
+	github.com/hopeio/utils v0.8.6
 	go.opentelemetry.io/otel v1.33.0
 	go.opentelemetry.io/otel/metric v1.33.0
 	go.opentelemetry.io/otel/trace v1.33.0

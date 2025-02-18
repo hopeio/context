@@ -130,8 +130,3 @@ func (c *Context) WithDeadlineCause(d time.Time, cause error) context.CancelFunc
 	c.ctx, cancel = context.WithDeadlineCause(c.ctx, d, cause)
 	return cancel
 }
-
-type ValueContext[V any] struct {
-	Context
-	Value V
-}

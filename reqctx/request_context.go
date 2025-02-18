@@ -10,16 +10,16 @@ import (
 	"context"
 	"github.com/google/uuid"
 	context2 "github.com/hopeio/context"
-	"github.com/hopeio/utils/net/http"
-	timei "github.com/hopeio/utils/time"
+	httpi "github.com/hopeio/utils/net/http"
 	"go.opentelemetry.io/otel/trace"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/metadata"
+	"net/http"
 	"strings"
 	"sync"
-	"time"
 )
 
-func GetPool[REQ any]() sync.Pool {
+func GetPool[REQ ReqCtx]() sync.Pool {
 	return sync.Pool{New: func() any {
 		return new(Context[REQ])
 	}}
@@ -30,15 +30,20 @@ type ReqValue struct {
 	AuthInfoRaw string
 	AuthID      string
 	AuthInfo
-	*DeviceInfo
+	device *DeviceInfo
 	grpc.ServerTransportStream
 	Internal string
-	http.RequestAt
+	RequestAt
 }
 
-type ReqCtx[REQ any] context2.ValueContext[ReqValue]
+type ReqCtx interface {
+	SetHeaders(md http.Header)
+	SetHeader(k, v string)
+	AddHeader(k, v string)
+	GetHeader(k string) string
+}
 
-type Context[REQ any] struct {
+type Context[REQ ReqCtx] struct {
 	context2.Context
 	ReqValue
 	ReqCtx REQ
@@ -61,7 +66,7 @@ func (c *Context[REQ]) StartSpanX(name string, o ...trace.SpanStartOption) (*Con
 	return c, span
 }
 
-func FromContextValue[REQ any](ctx context.Context) *Context[REQ] {
+func FromContextValue[REQ ReqCtx](ctx context.Context) *Context[REQ] {
 	if ctx == nil {
 		return New[REQ](context.Background(), *new(REQ))
 	}
@@ -78,35 +83,38 @@ func FromContextValue[REQ any](ctx context.Context) *Context[REQ] {
 	return c
 }
 
-func New[REQ any](ctx context.Context, req REQ) *Context[REQ] {
-	now := time.Now()
-
+func New[REQ ReqCtx](ctx context.Context, req REQ) *Context[REQ] {
 	return &Context[REQ]{
 		Context: *context2.New(ctx),
 		ReqValue: ReqValue{
-			RequestAt: http.RequestAt{
-				Time:       now,
-				TimeStamp:  now.Unix(),
-				TimeString: now.Format(timei.LayoutTimeMacro),
-			},
+			RequestAt:             NewRequestAt(),
 			ServerTransportStream: grpc.ServerTransportStreamFromContext(ctx),
+			Internal:              req.GetHeader(httpi.HeaderGrpcInternal),
+			Token:                 GetToken(req),
 		},
+
 		ReqCtx: req,
 	}
 }
 
 func (c *Context[REQ]) reset(ctx context.Context) *Context[REQ] {
 	span := trace.SpanFromContext(ctx)
-	now := time.Now()
 	traceId := span.SpanContext().TraceID().String()
 	if traceId == "" {
 		traceId = uuid.New().String()
 	}
 	c.SetBase(ctx)
-	c.RequestAt.Time = now
-	c.RequestAt.TimeString = now.Format(timei.LayoutTimeMacro)
-	c.RequestAt.TimeStamp = now.Unix()
+	c.RequestAt = NewRequestAt()
 	return c
+}
+
+func (c *Context[REQ]) Device() *DeviceInfo {
+	if c.device == nil {
+		c.device = Device(c.ReqCtx.GetHeader(httpi.HeaderDeviceInfo),
+			c.ReqCtx.GetHeader(httpi.HeaderArea), c.ReqCtx.GetHeader(httpi.HeaderLocation),
+			c.ReqCtx.GetHeader(httpi.HeaderUserAgent), c.ReqCtx.GetHeader(httpi.HeaderXForwardedFor))
+	}
+	return c.device
 }
 
 func (c *Context[REQ]) Method() string {
@@ -114,4 +122,48 @@ func (c *Context[REQ]) Method() string {
 		return c.ServerTransportStream.Method()
 	}
 	return ""
+}
+
+func (c *Context[REQ]) SetHeader(md metadata.MD) error {
+	c.ReqCtx.SetHeaders(http.Header(md))
+	if c.ServerTransportStream != nil {
+		err := c.ServerTransportStream.SetHeader(md)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (c *Context[REQ]) SendHeader(md metadata.MD) error {
+	c.ReqCtx.SetHeaders(http.Header(md))
+	if c.ServerTransportStream != nil {
+		err := c.ServerTransportStream.SendHeader(md)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (c *Context[REQ]) SetCookie(v string) error {
+	c.ReqCtx.AddHeader(httpi.HeaderSetCookie, v)
+	if c.ServerTransportStream != nil {
+		err := c.ServerTransportStream.SendHeader(metadata.MD{httpi.HeaderSetCookie: []string{v}})
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (c *Context[REQ]) SetTrailer(md metadata.MD) error {
+	c.ReqCtx.SetHeaders(http.Header(md))
+	if c.ServerTransportStream != nil {
+		err := c.ServerTransportStream.SetTrailer(md)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
