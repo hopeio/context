@@ -9,7 +9,6 @@ package fiberctx
 import (
 	"context"
 	"github.com/gofiber/fiber/v3"
-	"github.com/hopeio/context/fasthttpctx"
 	"github.com/hopeio/context/reqctx"
 	"net/http"
 )
@@ -42,10 +41,6 @@ type Context = reqctx.Context[RequestCtx]
 
 func FromContextValue(ctx context.Context) *Context {
 	return reqctx.FromContextValue[RequestCtx](ctx)
-}
-
-func (ctx RequestCtx) ConvertToFastHttpCtx() *fasthttpctx.RequestCtx {
-	return &fasthttpctx.RequestCtx{}
 }
 
 func FromRequest(req fiber.Ctx) *Context {
