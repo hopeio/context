@@ -11,14 +11,14 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/hopeio/context/httpctx"
 	"github.com/hopeio/context/reqctx"
-	"net/http"
+	"net/textproto"
 )
 
 type RequestCtx struct {
 	*gin.Context
 }
 
-func (ctx RequestCtx) SetHeaders(md http.Header) {
+func (ctx RequestCtx) SetHeaders(md textproto.MIMEHeader) {
 	header := ctx.Writer.Header()
 	for k, v := range md {
 		header[k] = v

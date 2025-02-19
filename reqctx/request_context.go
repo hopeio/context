@@ -14,7 +14,7 @@ import (
 	"go.opentelemetry.io/otel/trace"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
-	"net/http"
+	"net/textproto"
 	"strings"
 	"sync"
 )
@@ -35,7 +35,7 @@ type ReqValue struct {
 }
 
 type ReqCtx interface {
-	SetHeaders(md http.Header)
+	SetHeaders(md textproto.MIMEHeader)
 	SetHeader(k, v string)
 	AddHeader(k, v string)
 	GetHeader(k string) string
@@ -123,7 +123,7 @@ func (c *Context[REQ]) Method() string {
 }
 
 func (c *Context[REQ]) SetHeader(md metadata.MD) error {
-	c.ReqCtx.SetHeaders(http.Header(md))
+	c.ReqCtx.SetHeaders(textproto.MIMEHeader(md))
 	if c.ServerTransportStream != nil {
 		err := c.ServerTransportStream.SetHeader(md)
 		if err != nil {
@@ -134,7 +134,7 @@ func (c *Context[REQ]) SetHeader(md metadata.MD) error {
 }
 
 func (c *Context[REQ]) SendHeader(md metadata.MD) error {
-	c.ReqCtx.SetHeaders(http.Header(md))
+	c.ReqCtx.SetHeaders(textproto.MIMEHeader(md))
 	if c.ServerTransportStream != nil {
 		err := c.ServerTransportStream.SendHeader(md)
 		if err != nil {
@@ -156,7 +156,7 @@ func (c *Context[REQ]) SetCookie(v string) error {
 }
 
 func (c *Context[REQ]) SetTrailer(md metadata.MD) error {
-	c.ReqCtx.SetHeaders(http.Header(md))
+	c.ReqCtx.SetHeaders(textproto.MIMEHeader(md))
 	if c.ServerTransportStream != nil {
 		err := c.ServerTransportStream.SetTrailer(md)
 		if err != nil {

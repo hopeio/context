@@ -10,14 +10,14 @@ import (
 	"context"
 	"github.com/gofiber/fiber/v3"
 	"github.com/hopeio/context/reqctx"
-	"net/http"
+	"net/textproto"
 )
 
 type RequestCtx struct {
 	fiber.Ctx
 }
 
-func (ctx RequestCtx) SetHeaders(md http.Header) {
+func (ctx RequestCtx) SetHeaders(md textproto.MIMEHeader) {
 	for k, v := range md {
 		for _, vv := range v {
 			ctx.Set(k, vv)

@@ -10,6 +10,7 @@ import (
 	"context"
 	"github.com/hopeio/context/reqctx"
 	"net/http"
+	"net/textproto"
 )
 
 type RequestCtx struct {
@@ -17,7 +18,7 @@ type RequestCtx struct {
 	Response http.ResponseWriter
 }
 
-func (ctx RequestCtx) SetHeaders(md http.Header) {
+func (ctx RequestCtx) SetHeaders(md textproto.MIMEHeader) {
 	header := ctx.Response.Header()
 	for k, v := range md {
 		header[k] = v
