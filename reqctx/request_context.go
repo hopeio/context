@@ -26,10 +26,8 @@ func GetPool[REQ ReqCtx]() sync.Pool {
 }
 
 type ReqValue struct {
-	Token       string
-	AuthInfoRaw string
-	AuthID      string
-	AuthInfo
+	Token string
+	Auth
 	device *DeviceInfo
 	grpc.ServerTransportStream
 	Internal string

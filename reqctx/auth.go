@@ -64,3 +64,9 @@ func GetToken[REQ ReqCtx](r REQ) string {
 	}
 	return ""
 }
+
+type Auth struct {
+	AuthInfoRaw string
+	AuthID      string
+	AuthInfo
+}
