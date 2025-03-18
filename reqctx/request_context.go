@@ -10,7 +10,7 @@ import (
 	"context"
 	"github.com/google/uuid"
 	context2 "github.com/hopeio/context"
-	httpi "github.com/hopeio/utils/net/http"
+	"github.com/hopeio/utils/net/http/consts"
 	"go.opentelemetry.io/otel/trace"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
@@ -87,7 +87,7 @@ func New[REQ ReqCtx](ctx context.Context, req REQ) *Context[REQ] {
 		ReqValue: ReqValue{
 			RequestAt:             NewRequestAt(),
 			ServerTransportStream: grpc.ServerTransportStreamFromContext(ctx),
-			Internal:              req.GetHeader(httpi.HeaderGrpcInternal),
+			Internal:              req.GetHeader(consts.HeaderGrpcInternal),
 			Token:                 GetToken(req),
 		},
 
@@ -108,9 +108,9 @@ func (c *Context[REQ]) reset(ctx context.Context) *Context[REQ] {
 
 func (c *Context[REQ]) Device() *DeviceInfo {
 	if c.device == nil {
-		c.device = Device(c.ReqCtx.GetHeader(httpi.HeaderDeviceInfo),
-			c.ReqCtx.GetHeader(httpi.HeaderArea), c.ReqCtx.GetHeader(httpi.HeaderLocation),
-			c.ReqCtx.GetHeader(httpi.HeaderUserAgent), c.ReqCtx.GetHeader(httpi.HeaderXForwardedFor))
+		c.device = Device(c.ReqCtx.GetHeader(consts.HeaderDeviceInfo),
+			c.ReqCtx.GetHeader(consts.HeaderArea), c.ReqCtx.GetHeader(consts.HeaderLocation),
+			c.ReqCtx.GetHeader(consts.HeaderUserAgent), c.ReqCtx.GetHeader(consts.HeaderXForwardedFor))
 	}
 	return c.device
 }
@@ -145,9 +145,9 @@ func (c *Context[REQ]) SendHeader(md metadata.MD) error {
 }
 
 func (c *Context[REQ]) SetCookie(v string) error {
-	c.ReqCtx.AddHeader(httpi.HeaderSetCookie, v)
+	c.ReqCtx.AddHeader(consts.HeaderSetCookie, v)
 	if c.ServerTransportStream != nil {
-		err := c.ServerTransportStream.SendHeader(metadata.MD{httpi.HeaderSetCookie: []string{v}})
+		err := c.ServerTransportStream.SendHeader(metadata.MD{consts.HeaderSetCookie: []string{v}})
 		if err != nil {
 			return err
 		}

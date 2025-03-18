@@ -7,7 +7,7 @@
 package reqctx
 
 import (
-	httpi "github.com/hopeio/utils/net/http"
+	"github.com/hopeio/utils/net/http/consts"
 	"net/http"
 )
 
@@ -49,16 +49,16 @@ func (x *Authorization) ParseToken(token string, secret []byte) error {
 */
 
 func GetToken[REQ ReqCtx](r REQ) string {
-	if token := r.GetHeader(httpi.HeaderAuthorization); token != "" {
+	if token := r.GetHeader(consts.HeaderAuthorization); token != "" {
 		return token
 	}
-	cookie := r.GetHeader(httpi.HeaderCookie)
+	cookie := r.GetHeader(consts.HeaderCookie)
 	parseCookie, err := http.ParseCookie(cookie)
 	if err != nil {
 		return ""
 	}
 	for _, v := range parseCookie {
-		if v.Name == httpi.HeaderCookieValueToken {
+		if v.Name == consts.HeaderCookieValueToken {
 			return v.Value
 		}
 	}
