@@ -9,8 +9,8 @@ package httpctx
 import (
 	"context"
 	"github.com/hopeio/context/reqctx"
+	httpi "github.com/hopeio/utils/net/http"
 	"net/http"
-	"net/textproto"
 )
 
 type RequestCtx struct {
@@ -18,23 +18,12 @@ type RequestCtx struct {
 	Response http.ResponseWriter
 }
 
-func (ctx RequestCtx) SetHeaders(md textproto.MIMEHeader) {
-	header := ctx.Response.Header()
-	for k, v := range md {
-		header[k] = v
-	}
+func (ctx RequestCtx) RequestHeader() httpi.Header {
+	return httpi.HttpHeader(ctx.Request.Header)
 }
 
-func (ctx RequestCtx) SetHeader(k, v string) {
-	ctx.Response.Header().Set(k, v)
-}
-
-func (ctx RequestCtx) AddHeader(k, v string) {
-	ctx.Response.Header().Add(k, v)
-}
-
-func (ctx RequestCtx) GetHeader(k string) string {
-	return ctx.Request.Header.Get(k)
+func (ctx RequestCtx) ResponseHeader() httpi.Header {
+	return httpi.HttpHeader(ctx.Response.Header())
 }
 
 type Context = reqctx.Context[RequestCtx]

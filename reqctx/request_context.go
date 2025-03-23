@@ -10,11 +10,11 @@ import (
 	"context"
 	"github.com/google/uuid"
 	context2 "github.com/hopeio/context"
+	httpi "github.com/hopeio/utils/net/http"
 	"github.com/hopeio/utils/net/http/consts"
 	"go.opentelemetry.io/otel/trace"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
-	"net/textproto"
 	"strings"
 	"sync"
 )
@@ -35,10 +35,8 @@ type ReqValue struct {
 }
 
 type ReqCtx interface {
-	SetHeaders(md textproto.MIMEHeader)
-	SetHeader(k, v string)
-	AddHeader(k, v string)
-	GetHeader(k string) string
+	RequestHeader() httpi.Header
+	ResponseHeader() httpi.Header
 }
 
 type Context[REQ ReqCtx] struct {
@@ -87,7 +85,7 @@ func New[REQ ReqCtx](ctx context.Context, req REQ) *Context[REQ] {
 		ReqValue: ReqValue{
 			RequestAt:             NewRequestAt(),
 			ServerTransportStream: grpc.ServerTransportStreamFromContext(ctx),
-			Internal:              req.GetHeader(consts.HeaderGrpcInternal),
+			Internal:              req.RequestHeader().Get(consts.HeaderGrpcInternal),
 			Token:                 GetToken(req),
 		},
 
@@ -108,9 +106,10 @@ func (c *Context[REQ]) reset(ctx context.Context) *Context[REQ] {
 
 func (c *Context[REQ]) Device() *DeviceInfo {
 	if c.device == nil {
-		c.device = Device(c.ReqCtx.GetHeader(consts.HeaderDeviceInfo),
-			c.ReqCtx.GetHeader(consts.HeaderArea), c.ReqCtx.GetHeader(consts.HeaderLocation),
-			c.ReqCtx.GetHeader(consts.HeaderUserAgent), c.ReqCtx.GetHeader(consts.HeaderXForwardedFor))
+		header := c.ReqCtx.RequestHeader()
+		c.device = Device(header.Get(consts.HeaderDeviceInfo),
+			header.Get(consts.HeaderArea), header.Get(consts.HeaderLocation),
+			header.Get(consts.HeaderUserAgent), header.Get(consts.HeaderXForwardedFor))
 	}
 	return c.device
 }
@@ -123,7 +122,10 @@ func (c *Context[REQ]) Method() string {
 }
 
 func (c *Context[REQ]) SetHeader(md metadata.MD) error {
-	c.ReqCtx.SetHeaders(textproto.MIMEHeader(md))
+	header := c.ReqCtx.ResponseHeader()
+	for k, v := range md {
+		header.Set(k, v[0])
+	}
 	if c.ServerTransportStream != nil {
 		err := c.ServerTransportStream.SetHeader(md)
 		if err != nil {
@@ -134,7 +136,10 @@ func (c *Context[REQ]) SetHeader(md metadata.MD) error {
 }
 
 func (c *Context[REQ]) SendHeader(md metadata.MD) error {
-	c.ReqCtx.SetHeaders(textproto.MIMEHeader(md))
+	header := c.ReqCtx.ResponseHeader()
+	for k, v := range md {
+		header.Set(k, v[0])
+	}
 	if c.ServerTransportStream != nil {
 		err := c.ServerTransportStream.SendHeader(md)
 		if err != nil {
@@ -145,7 +150,7 @@ func (c *Context[REQ]) SendHeader(md metadata.MD) error {
 }
 
 func (c *Context[REQ]) SetCookie(v string) error {
-	c.ReqCtx.AddHeader(consts.HeaderSetCookie, v)
+	c.ReqCtx.ResponseHeader().Set(consts.HeaderSetCookie, v)
 	if c.ServerTransportStream != nil {
 		err := c.ServerTransportStream.SendHeader(metadata.MD{consts.HeaderSetCookie: []string{v}})
 		if err != nil {
@@ -156,7 +161,10 @@ func (c *Context[REQ]) SetCookie(v string) error {
 }
 
 func (c *Context[REQ]) SetTrailer(md metadata.MD) error {
-	c.ReqCtx.SetHeaders(textproto.MIMEHeader(md))
+	header := c.ReqCtx.ResponseHeader()
+	for k, v := range md {
+		header.Set(k, v[0])
+	}
 	if c.ServerTransportStream != nil {
 		err := c.ServerTransportStream.SetTrailer(md)
 		if err != nil {

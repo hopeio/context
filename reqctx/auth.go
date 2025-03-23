@@ -49,10 +49,11 @@ func (x *Authorization) ParseToken(token string, secret []byte) error {
 */
 
 func GetToken[REQ ReqCtx](r REQ) string {
-	if token := r.GetHeader(consts.HeaderAuthorization); token != "" {
+	header := r.RequestHeader()
+	if token := header.Get(consts.HeaderAuthorization); token != "" {
 		return token
 	}
-	cookie := r.GetHeader(consts.HeaderCookie)
+	cookie := header.Get(consts.HeaderCookie)
 	parsedCookie, err := http.ParseCookie(cookie)
 	if err != nil {
 		return ""

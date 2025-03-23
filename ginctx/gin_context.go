@@ -11,32 +11,20 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/hopeio/context/httpctx"
 	"github.com/hopeio/context/reqctx"
-	"net/textproto"
+	httpi "github.com/hopeio/utils/net/http"
 )
 
 type RequestCtx struct {
 	*gin.Context
 }
 
-func (ctx RequestCtx) SetHeaders(md textproto.MIMEHeader) {
-	header := ctx.Writer.Header()
-	for k, v := range md {
-		header[k] = v
-	}
+func (ctx RequestCtx) RequestHeader() httpi.Header {
+	return httpi.HttpHeader(ctx.Request.Header)
 }
 
-func (ctx RequestCtx) SetHeader(k, v string) {
-	ctx.Writer.Header().Set(k, v)
+func (ctx RequestCtx) ResponseHeader() httpi.Header {
+	return httpi.HttpHeader(ctx.Writer.Header())
 }
-
-func (ctx RequestCtx) AddHeader(k, v string) {
-	ctx.Writer.Header().Add(k, v)
-}
-
-func (ctx RequestCtx) GetHeader(k string) string {
-	return ctx.Request.Header.Get(k)
-}
-
 func (ctx RequestCtx) ToHttpReqCtx() httpctx.RequestCtx {
 	return httpctx.RequestCtx{Request: ctx.Request, Response: ctx.Writer}
 }

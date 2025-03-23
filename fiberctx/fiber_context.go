@@ -10,31 +10,20 @@ import (
 	"context"
 	"github.com/gofiber/fiber/v3"
 	"github.com/hopeio/context/reqctx"
-	"net/textproto"
+	httpi "github.com/hopeio/utils/net/http"
+	fiberi "github.com/hopeio/utils/net/http/fiber"
 )
 
 type RequestCtx struct {
 	fiber.Ctx
 }
 
-func (ctx RequestCtx) SetHeaders(md textproto.MIMEHeader) {
-	for k, v := range md {
-		for _, vv := range v {
-			ctx.Set(k, vv)
-		}
-	}
+func (ctx RequestCtx) RequestHeader() httpi.Header {
+	return fiberi.RequestHeader{RequestHeader: &ctx.Request().Header}
 }
 
-func (ctx RequestCtx) SetHeader(k, v string) {
-	ctx.Set(k, v)
-}
-
-func (ctx RequestCtx) AddHeader(k, v string) {
-	ctx.Response().Header.Add(k, v)
-}
-
-func (ctx RequestCtx) GetHeader(k string) string {
-	return ctx.Get(k)
+func (ctx RequestCtx) ResponseHeader() httpi.Header {
+	return fiberi.ResponseHeader{ResponseHeader: &ctx.Response().Header}
 }
 
 type Context = reqctx.Context[RequestCtx]
