@@ -53,11 +53,11 @@ func GetToken[REQ ReqCtx](r REQ) string {
 		return token
 	}
 	cookie := r.GetHeader(consts.HeaderCookie)
-	parseCookie, err := http.ParseCookie(cookie)
+	parsedCookie, err := http.ParseCookie(cookie)
 	if err != nil {
 		return ""
 	}
-	for _, v := range parseCookie {
+	for _, v := range parsedCookie {
 		if v.Name == consts.HeaderCookieValueToken {
 			return v.Value
 		}
