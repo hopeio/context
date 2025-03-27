@@ -23,6 +23,6 @@ func (c *Context) RespErrorLog(respErr, originErr error, flag string, fields ...
 	// caller 用原始logger skip刚好
 	fields = append(fields, zap.String(log.FieldTraceId, c.traceID),
 		zap.String(log.FieldPosition, flag))
-	log.GetCallerSkipLogger(1).Errorw(originErr.Error(), fields...)
+	log.CallerSkipLogger(1).Errorw(originErr.Error(), fields...)
 	return respErr
 }
