@@ -26,19 +26,16 @@ func (ctx RequestCtx) ResponseHeader() httpi.Header {
 	return fiberi.ResponseHeader{ResponseHeader: &ctx.Response().Header}
 }
 
+func (ctx RequestCtx) RequestContext() context.Context {
+	return ctx.Ctx.Context()
+}
+
 type Context = reqctx.Context[RequestCtx]
 
-func FromContextValue(ctx context.Context) *Context {
+func FromContextValue(ctx context.Context) (*Context, bool) {
 	return reqctx.FromContextValue[RequestCtx](ctx)
 }
 
 func FromRequest(req fiber.Ctx) *Context {
-	r := req.Request
-
-	var ctx context.Context
-	if r != nil {
-		ctx = req.Context()
-	}
-	ctxi := reqctx.New[RequestCtx](ctx, RequestCtx{req})
-	return ctxi
+	return reqctx.New[RequestCtx](RequestCtx{req})
 }

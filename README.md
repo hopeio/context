@@ -21,7 +21,7 @@ import (
 ### wrap and unwrap
 ```go
 stdctx = ctx.Wrapper()
-ctx = context.FromContextValue(stdctx)
+ctxi,_ = context.FromContextValue(stdctx)
 ```
 ## request context
 ### new
@@ -41,7 +41,7 @@ func Middleware(w http.ResponseWriter, r *http.Request) {
     r.WithContext(ctx.Wrapper())
 }
 func Handle(w http.ResponseWriter, r *http.Request) {
-    reqctx := httpctx.FromContextValue(r.Context())
+    reqctx, ok := httpctx.FromContextValue(r.Context())
 }
 
 ```

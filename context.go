@@ -20,6 +20,10 @@ type Context struct {
 }
 
 func New(ctx context.Context) *Context {
+	c, ok := FromContextValue(ctx)
+	if ok {
+		return c
+	}
 	var traceId string
 	var rootSpan trace.Span
 	if ctx != nil {
@@ -31,7 +35,7 @@ func New(ctx context.Context) *Context {
 	} else {
 		ctx = context.Background()
 	}
-	if traceId == "" || rootSpan == nil {
+	if rootSpan == nil || traceId == "" {
 		ctx, rootSpan = StartSpan(ctx, "")
 		if spanContext := rootSpan.SpanContext(); spanContext.IsValid() {
 			traceId = spanContext.TraceID().String()
@@ -61,18 +65,17 @@ func WrapperKey() ctxKey {
 	return ctxKey{}
 }
 
-func FromContextValue(ctx context.Context) *Context {
+func FromContextValue(ctx context.Context) (*Context, bool) {
 	if ctx == nil {
-		return New(nil)
+		return nil, false
 	}
-
 	ctxi := ctx.Value(ctxKey{})
 	c, ok := ctxi.(*Context)
 	if !ok {
-		c = New(ctx)
+		return nil, false
 	}
 	c.ctx = ctx
-	return c
+	return c, ok
 }
 
 func (c *Context) Base() context.Context {

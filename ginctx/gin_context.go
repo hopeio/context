@@ -25,24 +25,17 @@ func (ctx RequestCtx) RequestHeader() httpi.Header {
 func (ctx RequestCtx) ResponseHeader() httpi.Header {
 	return httpi.HttpHeader(ctx.Writer.Header())
 }
+
+func (ctx RequestCtx) RequestContext() context.Context {
+	return ctx.Request.Context()
+}
+
 func (ctx RequestCtx) ToHttpReqCtx() httpctx.RequestCtx {
 	return httpctx.RequestCtx{Request: ctx.Request, Response: ctx.Writer}
 }
 
 type Context = reqctx.Context[RequestCtx]
 
-func FromContextValue(ctx context.Context) *Context {
-	return reqctx.FromContextValue[RequestCtx](ctx)
-}
-
 func FromRequest(req *gin.Context) *Context {
-	r := req.Request
-
-	var ctx context.Context
-	if r != nil {
-		ctx = r.Context()
-	}
-
-	ctxi := reqctx.New[RequestCtx](ctx, RequestCtx{req})
-	return ctxi
+	return reqctx.New[RequestCtx](RequestCtx{req})
 }

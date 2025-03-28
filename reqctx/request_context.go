@@ -37,6 +37,7 @@ type ReqValue struct {
 type ReqCtx interface {
 	RequestHeader() httpi.Header
 	ResponseHeader() httpi.Header
+	RequestContext() context.Context
 }
 
 type Context[REQ ReqCtx] struct {
@@ -62,24 +63,28 @@ func (c *Context[REQ]) StartSpanX(name string, o ...trace.SpanStartOption) (*Con
 	return c, span
 }
 
-func FromContextValue[REQ ReqCtx](ctx context.Context) *Context[REQ] {
+func FromContextValue[REQ ReqCtx](ctx context.Context) (*Context[REQ], bool) {
 	if ctx == nil {
-		return New[REQ](context.Background(), *new(REQ))
+		return nil, false
 	}
-
 	ctxi := ctx.Value(context2.WrapperKey())
 	c, ok := ctxi.(*Context[REQ])
 	if !ok {
-		c = New[REQ](ctx, *new(REQ))
+		return nil, false
 	}
 	if c.ServerTransportStream == nil {
 		c.ServerTransportStream = grpc.ServerTransportStreamFromContext(ctx)
 	}
 	c.SetBase(ctx)
-	return c
+	return c, ok
 }
 
-func New[REQ ReqCtx](ctx context.Context, req REQ) *Context[REQ] {
+func New[REQ ReqCtx](req REQ) *Context[REQ] {
+	ctx := req.RequestContext()
+	c, ok := FromContextValue[REQ](ctx)
+	if ok {
+		return c
+	}
 	return &Context[REQ]{
 		Context: *context2.New(ctx),
 		ReqValue: ReqValue{
@@ -88,7 +93,6 @@ func New[REQ ReqCtx](ctx context.Context, req REQ) *Context[REQ] {
 			Internal:              req.RequestHeader().Get(consts.HeaderGrpcInternal),
 			Token:                 GetToken(req),
 		},
-
 		ReqCtx: req,
 	}
 }

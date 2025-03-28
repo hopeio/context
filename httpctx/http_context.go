@@ -26,17 +26,16 @@ func (ctx RequestCtx) ResponseHeader() httpi.Header {
 	return httpi.HttpHeader(ctx.Response.Header())
 }
 
+func (ctx RequestCtx) RequestContext() context.Context {
+	return ctx.Request.Context()
+}
+
 type Context = reqctx.Context[RequestCtx]
 
-func FromContextValue(ctx context.Context) *Context {
+func FromContextValue(ctx context.Context) (*Context, bool) {
 	return reqctx.FromContextValue[RequestCtx](ctx)
 }
 
 func FromRequest(req RequestCtx) *Context {
-	r := req.Request
-	var ctx context.Context
-	if r != nil {
-		ctx = r.Context()
-	}
-	return reqctx.New[RequestCtx](ctx, req)
+	return reqctx.New[RequestCtx](req)
 }
