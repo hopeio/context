@@ -35,9 +35,9 @@ type ReqValue struct {
 }
 
 type ReqCtx interface {
+	RequestContext() context.Context
 	RequestHeader() httpi.Header
 	ResponseHeader() httpi.Header
-	RequestContext() context.Context
 }
 
 type Context[REQ ReqCtx] struct {

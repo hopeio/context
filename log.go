@@ -19,6 +19,7 @@ func (c *Context) Log(lvl zapcore.Level, msg string, fields ...zap.Field) {
 func (c *Context) ErrorLog(err error, fields ...zap.Field) {
 	log.Errorw(err.Error(), append(fields, zap.String(log.FieldTraceId, c.traceID))...)
 }
+
 func (c *Context) RespErrorLog(respErr, originErr error, flag string, fields ...zap.Field) error {
 	// caller 用原始logger skip刚好
 	fields = append(fields, zap.String(log.FieldTraceId, c.traceID),
