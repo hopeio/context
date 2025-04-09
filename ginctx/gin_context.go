@@ -30,6 +30,10 @@ func (ctx RequestCtx) RequestContext() context.Context {
 	return ctx.Request.Context()
 }
 
+func (ctx RequestCtx) Origin() *gin.Context {
+	return ctx.Context
+}
+
 func (ctx RequestCtx) ToHttpReqCtx() httpctx.RequestCtx {
 	return httpctx.RequestCtx{Request: ctx.Request, Response: ctx.Writer}
 }

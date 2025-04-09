@@ -30,6 +30,10 @@ func (ctx RequestCtx) RequestContext() context.Context {
 	return ctx.Ctx.Context()
 }
 
+func (ctx RequestCtx) Origin() fiber.Ctx {
+	return ctx.Ctx
+}
+
 type Context = reqctx.Context[RequestCtx]
 
 func FromContextValue(ctx context.Context) (*Context, bool) {
