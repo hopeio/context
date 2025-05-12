@@ -8,7 +8,7 @@ package context
 
 import (
 	"context"
-	"github.com/google/uuid"
+	"github.com/hopeio/utils/structure/idgen/id"
 	"go.opentelemetry.io/otel/trace"
 	"time"
 )
@@ -40,7 +40,7 @@ func New(ctx context.Context) *Context {
 		if spanContext := rootSpan.SpanContext(); spanContext.IsValid() {
 			traceId = spanContext.TraceID().String()
 		} else {
-			traceId = uuid.New().String()
+			traceId = id.NewRandomID().String()
 		}
 	}
 

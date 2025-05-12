@@ -44,15 +44,6 @@ func (c *Context) StartSpan(name string, o ...trace.SpanStartOption) trace.Span 
 	return span
 }
 
-func (c *Context) StartSpanX(name string, o ...trace.SpanStartOption) (*Context, trace.Span) {
-	ctx, span := Tracer.Start(c.ctx, name, o...)
-	c.ctx = ctx
-	if c.traceID == "" {
-		c.traceID = span.SpanContext().TraceID().String()
-	}
-	return c, span
-}
-
 func (c *Context) StartSpanEnd(name string, o ...trace.SpanStartOption) func(options ...trace.SpanEndOption) {
 	ctx, span := Tracer.Start(c.ctx, name, o...)
 	c.ctx = ctx

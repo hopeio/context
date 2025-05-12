@@ -58,11 +58,6 @@ func (c *Context[REQ]) Wrapper() context.Context {
 	return context.WithValue(c.Context.Base(), context2.WrapperKey(), c)
 }
 
-func (c *Context[REQ]) StartSpanX(name string, o ...trace.SpanStartOption) (*Context[REQ], trace.Span) {
-	span := c.Context.StartSpan(name, o...)
-	return c, span
-}
-
 func FromContextValue[REQ ReqCtx](ctx context.Context) (*Context[REQ], bool) {
 	if ctx == nil {
 		return nil, false
