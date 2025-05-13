@@ -8,11 +8,9 @@ package reqctx
 
 import (
 	"context"
-	"github.com/google/uuid"
 	context2 "github.com/hopeio/context"
 	httpi "github.com/hopeio/utils/net/http"
 	"github.com/hopeio/utils/net/http/consts"
-	"go.opentelemetry.io/otel/trace"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 	"strings"
@@ -90,17 +88,6 @@ func New[REQ ReqCtx](req REQ) *Context[REQ] {
 		},
 		ReqCtx: req,
 	}
-}
-
-func (c *Context[REQ]) reset(ctx context.Context) *Context[REQ] {
-	span := trace.SpanFromContext(ctx)
-	traceId := span.SpanContext().TraceID().String()
-	if traceId == "" {
-		traceId = uuid.New().String()
-	}
-	c.SetBase(ctx)
-	c.RequestAt = NewRequestAt()
-	return c
 }
 
 func (c *Context[REQ]) Device() *DeviceInfo {
