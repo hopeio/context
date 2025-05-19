@@ -56,7 +56,7 @@ func (c *Context[REQ]) Wrapper() context.Context {
 	return context.WithValue(c.Context.Base(), context2.WrapperKey(), c)
 }
 
-func FromContextValue[REQ ReqCtx](ctx context.Context) (*Context[REQ], bool) {
+func FromContext[REQ ReqCtx](ctx context.Context) (*Context[REQ], bool) {
 	if ctx == nil {
 		return nil, false
 	}
@@ -74,7 +74,7 @@ func FromContextValue[REQ ReqCtx](ctx context.Context) (*Context[REQ], bool) {
 
 func New[REQ ReqCtx](req REQ) *Context[REQ] {
 	ctx := req.RequestContext()
-	c, ok := FromContextValue[REQ](ctx)
+	c, ok := FromContext[REQ](ctx)
 	if ok {
 		return c
 	}

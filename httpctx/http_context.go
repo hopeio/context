@@ -32,8 +32,8 @@ func (ctx RequestCtx) RequestContext() context.Context {
 
 type Context = reqctx.Context[RequestCtx]
 
-func FromContextValue(ctx context.Context) (*Context, bool) {
-	return reqctx.FromContextValue[RequestCtx](ctx)
+func FromContext(ctx context.Context) (*Context, bool) {
+	return reqctx.FromContext[RequestCtx](ctx)
 }
 
 func FromRequest(req RequestCtx) *Context {

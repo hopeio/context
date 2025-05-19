@@ -20,7 +20,7 @@ type Context struct {
 }
 
 func New(ctx context.Context) *Context {
-	c, ok := FromContextValue(ctx)
+	c, ok := FromContext(ctx)
 	if ok {
 		return c
 	}
@@ -65,7 +65,7 @@ func WrapperKey() ctxKey {
 	return ctxKey{}
 }
 
-func FromContextValue(ctx context.Context) (*Context, bool) {
+func FromContext(ctx context.Context) (*Context, bool) {
 	if ctx == nil {
 		return nil, false
 	}
