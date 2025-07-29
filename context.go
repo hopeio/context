@@ -8,7 +8,7 @@ package context
 
 import (
 	"context"
-	"github.com/hopeio/utils/structure/idgen/id"
+	"github.com/hopeio/utils/datastructure/idgen/id"
 	"go.opentelemetry.io/otel/trace"
 	"time"
 )
