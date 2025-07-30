@@ -10,8 +10,8 @@ import (
 	"context"
 	"github.com/gofiber/fiber/v3"
 	"github.com/hopeio/context/reqctx"
-	httpi "github.com/hopeio/utils/net/http"
-	fiberi "github.com/hopeio/utils/net/http/fiber"
+	httpi "github.com/hopeio/gox/net/http"
+	fiberi "github.com/hopeio/gox/net/http/fiber"
 )
 
 type RequestCtx struct {

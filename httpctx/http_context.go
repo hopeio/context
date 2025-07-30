@@ -9,7 +9,7 @@ package httpctx
 import (
 	"context"
 	"github.com/hopeio/context/reqctx"
-	httpi "github.com/hopeio/utils/net/http"
+	httpi "github.com/hopeio/gox/net/http"
 	"net/http"
 )
 

@@ -7,7 +7,7 @@
 package context
 
 import (
-	"github.com/hopeio/utils/log"
+	"github.com/hopeio/gox/log"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )

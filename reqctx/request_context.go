@@ -9,8 +9,8 @@ package reqctx
 import (
 	"context"
 	context2 "github.com/hopeio/context"
-	httpi "github.com/hopeio/utils/net/http"
-	"github.com/hopeio/utils/net/http/consts"
+	httpi "github.com/hopeio/gox/net/http"
+	"github.com/hopeio/gox/net/http/consts"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 	"strings"
