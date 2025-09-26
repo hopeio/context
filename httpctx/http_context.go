@@ -8,22 +8,19 @@ package httpctx
 
 import (
 	"context"
-	"github.com/hopeio/context/reqctx"
-	httpi "github.com/hopeio/gox/net/http"
 	"net/http"
+
+	"github.com/hopeio/context/reqctx"
+	httpx "github.com/hopeio/gox/net/http"
 )
 
 type RequestCtx struct {
-	Request  *http.Request
-	Response http.ResponseWriter
+	*http.Request
+	http.ResponseWriter
 }
 
-func (ctx RequestCtx) RequestHeader() httpi.Header {
-	return httpi.HttpHeader(ctx.Request.Header)
-}
-
-func (ctx RequestCtx) ResponseHeader() httpi.Header {
-	return httpi.HttpHeader(ctx.Response.Header())
+func (ctx RequestCtx) RequestHeader() httpx.Header {
+	return httpx.HttpHeader(ctx.Request.Header)
 }
 
 func (ctx RequestCtx) RequestContext() context.Context {

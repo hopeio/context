@@ -8,13 +8,11 @@ package reqctx
 
 import (
 	"context"
-	context2 "github.com/hopeio/context"
-	httpi "github.com/hopeio/gox/net/http"
-	"github.com/hopeio/gox/net/http/consts"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/metadata"
 	"strings"
 	"sync"
+
+	context2 "github.com/hopeio/context"
+	httpx "github.com/hopeio/gox/net/http"
 )
 
 func GetPool[REQ ReqCtx]() sync.Pool {
@@ -26,16 +24,14 @@ func GetPool[REQ ReqCtx]() sync.Pool {
 type ReqValue struct {
 	Token string
 	Auth
-	device *DeviceInfo
-	grpc.ServerTransportStream
+	device   *DeviceInfo
 	Internal string
 	RequestAt
 }
 
 type ReqCtx interface {
 	RequestContext() context.Context
-	RequestHeader() httpi.Header
-	ResponseHeader() httpi.Header
+	RequestHeader() httpx.Header
 }
 
 type Context[REQ ReqCtx] struct {
@@ -65,9 +61,6 @@ func FromContext[REQ ReqCtx](ctx context.Context) (*Context[REQ], bool) {
 	if !ok {
 		return nil, false
 	}
-	if c.ServerTransportStream == nil {
-		c.ServerTransportStream = grpc.ServerTransportStreamFromContext(ctx)
-	}
 	c.SetBase(ctx)
 	return c, ok
 }
@@ -81,10 +74,9 @@ func New[REQ ReqCtx](req REQ) *Context[REQ] {
 	return &Context[REQ]{
 		Context: *context2.New(ctx),
 		ReqValue: ReqValue{
-			RequestAt:             NewRequestAt(),
-			ServerTransportStream: grpc.ServerTransportStreamFromContext(ctx),
-			Internal:              req.RequestHeader().Get(consts.HeaderGrpcInternal),
-			Token:                 GetToken(req),
+			RequestAt: NewRequestAt(),
+			Internal:  req.RequestHeader().Get(httpx.HeaderGrpcInternal),
+			Token:     GetToken(req),
 		},
 		ReqCtx: req,
 	}
@@ -93,69 +85,9 @@ func New[REQ ReqCtx](req REQ) *Context[REQ] {
 func (c *Context[REQ]) Device() *DeviceInfo {
 	if c.device == nil {
 		header := c.ReqCtx.RequestHeader()
-		c.device = Device(header.Get(consts.HeaderDeviceInfo),
-			header.Get(consts.HeaderArea), header.Get(consts.HeaderLocation),
-			header.Get(consts.HeaderUserAgent), header.Get(consts.HeaderXForwardedFor))
+		c.device = Device(header.Get(httpx.HeaderDeviceInfo),
+			header.Get(httpx.HeaderArea), header.Get(httpx.HeaderLocation),
+			header.Get(httpx.HeaderUserAgent), header.Get(httpx.HeaderXForwardedFor))
 	}
 	return c.device
-}
-
-func (c *Context[REQ]) Method() string {
-	if c.ServerTransportStream != nil {
-		return c.ServerTransportStream.Method()
-	}
-	return ""
-}
-
-func (c *Context[REQ]) SetHeader(md metadata.MD) error {
-	header := c.ReqCtx.ResponseHeader()
-	for k, v := range md {
-		header.Set(k, v[0])
-	}
-	if c.ServerTransportStream != nil {
-		err := c.ServerTransportStream.SetHeader(md)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func (c *Context[REQ]) SendHeader(md metadata.MD) error {
-	header := c.ReqCtx.ResponseHeader()
-	for k, v := range md {
-		header.Set(k, v[0])
-	}
-	if c.ServerTransportStream != nil {
-		err := c.ServerTransportStream.SendHeader(md)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func (c *Context[REQ]) SetCookie(v string) error {
-	c.ReqCtx.ResponseHeader().Set(consts.HeaderSetCookie, v)
-	if c.ServerTransportStream != nil {
-		err := c.ServerTransportStream.SendHeader(metadata.MD{consts.HeaderSetCookie: []string{v}})
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func (c *Context[REQ]) SetTrailer(md metadata.MD) error {
-	header := c.ReqCtx.ResponseHeader()
-	for k, v := range md {
-		header.Set(k, v[0])
-	}
-	if c.ServerTransportStream != nil {
-		err := c.ServerTransportStream.SetTrailer(md)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
 }

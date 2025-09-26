@@ -8,22 +8,19 @@ package fiberctx
 
 import (
 	"context"
+
 	"github.com/gofiber/fiber/v3"
 	"github.com/hopeio/context/reqctx"
-	httpi "github.com/hopeio/gox/net/http"
-	fiberi "github.com/hopeio/gox/net/http/fiber"
+	httpx "github.com/hopeio/gox/net/http"
+	fiberx "github.com/hopeio/gox/net/http/fiber"
 )
 
 type RequestCtx struct {
 	fiber.Ctx
 }
 
-func (ctx RequestCtx) RequestHeader() httpi.Header {
-	return fiberi.RequestHeader{RequestHeader: &ctx.Request().Header}
-}
-
-func (ctx RequestCtx) ResponseHeader() httpi.Header {
-	return fiberi.ResponseHeader{ResponseHeader: &ctx.Response().Header}
+func (ctx RequestCtx) RequestHeader() httpx.Header {
+	return fiberx.RequestHeader{RequestHeader: &ctx.Request().Header}
 }
 
 func (ctx RequestCtx) RequestContext() context.Context {

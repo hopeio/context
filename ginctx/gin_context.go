@@ -8,22 +8,18 @@ package ginctx
 
 import (
 	"context"
+
 	"github.com/gin-gonic/gin"
-	"github.com/hopeio/context/httpctx"
 	"github.com/hopeio/context/reqctx"
-	httpi "github.com/hopeio/gox/net/http"
+	httpx "github.com/hopeio/gox/net/http"
 )
 
 type RequestCtx struct {
 	*gin.Context
 }
 
-func (ctx RequestCtx) RequestHeader() httpi.Header {
-	return httpi.HttpHeader(ctx.Request.Header)
-}
-
-func (ctx RequestCtx) ResponseHeader() httpi.Header {
-	return httpi.HttpHeader(ctx.Writer.Header())
+func (ctx RequestCtx) RequestHeader() httpx.Header {
+	return httpx.HttpHeader(ctx.Request.Header)
 }
 
 func (ctx RequestCtx) RequestContext() context.Context {
@@ -32,10 +28,6 @@ func (ctx RequestCtx) RequestContext() context.Context {
 
 func (ctx RequestCtx) Origin() *gin.Context {
 	return ctx.Context
-}
-
-func (ctx RequestCtx) ToHttpReqCtx() httpctx.RequestCtx {
-	return httpctx.RequestCtx{Request: ctx.Request, Response: ctx.Writer}
 }
 
 type Context = reqctx.Context[RequestCtx]
