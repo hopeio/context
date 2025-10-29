@@ -7,8 +7,9 @@
 package reqctx
 
 import (
-	timei "github.com/hopeio/gox/time"
 	"time"
+
+	timex "github.com/hopeio/gox/time"
 )
 
 type RequestAt struct {
@@ -19,7 +20,7 @@ type RequestAt struct {
 
 func (r *RequestAt) String() string {
 	if r.timeString == "" {
-		r.timeString = r.Time.Format(timei.LayoutTimeMacro)
+		r.timeString = r.Time.Format(timex.LayoutTimeMacro)
 	}
 	return r.timeString
 }
