@@ -8,9 +8,10 @@ package context
 
 import (
 	"context"
-	"github.com/hopeio/gox/container/idgen/id"
-	"go.opentelemetry.io/otel/trace"
 	"time"
+
+	"github.com/hopeio/gox/idgen/id"
+	"go.opentelemetry.io/otel/trace"
 )
 
 type Context struct {
