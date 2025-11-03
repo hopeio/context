@@ -24,7 +24,7 @@ require (
 
 require (
 	github.com/gofiber/fiber/v3 v3.0.0-beta.3
-	github.com/hopeio/gox v1.3.1
+	github.com/hopeio/gox v1.3.3
 	go.opentelemetry.io/otel v1.38.0
 	go.opentelemetry.io/otel/trace v1.38.0
 )
