@@ -21,7 +21,7 @@ func GetPool[REQ ReqCtx]() sync.Pool {
 	}}
 }
 
-type ReqValue struct {
+type ReqMeta struct {
 	Token string
 	Auth
 	device   *DeviceInfo
@@ -36,7 +36,7 @@ type ReqCtx interface {
 
 type Context[REQ ReqCtx] struct {
 	context2.Context
-	ReqValue
+	ReqMeta
 	ReqCtx REQ
 }
 
@@ -73,7 +73,7 @@ func New[REQ ReqCtx](req REQ) *Context[REQ] {
 	}
 	return &Context[REQ]{
 		Context: *context2.New(ctx),
-		ReqValue: ReqValue{
+		ReqMeta: ReqMeta{
 			RequestAt: NewRequestAt(),
 			Internal:  req.RequestHeader().Get(httpx.HeaderGrpcInternal),
 			Token:     GetToken(req),
