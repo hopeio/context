@@ -17,7 +17,7 @@ require (
 )
 
 require (
-	github.com/hopeio/gox v1.3.18
+	github.com/hopeio/gox v1.3.19
 	go.opentelemetry.io/otel v1.38.0
 	go.opentelemetry.io/otel/trace v1.38.0
 )
